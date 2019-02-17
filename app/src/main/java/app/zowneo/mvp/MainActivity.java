@@ -1,40 +1,60 @@
 package app.zowneo.mvp;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.ListView;
+import android.widget.GridView;
+import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import app.zowneo.mvp.adapter.GirlAdapter;
 import app.zowneo.mvp.bean.Girl;
+import app.zowneo.mvp.presenter.GirlPresenter;
+import app.zowneo.mvp.view.BaseActivity;
+import app.zowneo.mvp.view.IGirlView;
 
-public class MainActivity extends AppCompatActivity {
-    private ListView listView;
-    List<Girl> data = new ArrayList<Girl>();
-    public void init() {
-        data.add(new Girl(R.drawable.f1, "五颗星", "时时尚潮流时尚潮流时尚潮流尚潮流"));
-        data.add(new Girl(R.drawable.f2, "二颗星", "米意米意识诺米意识诺米意识诺识诺"));
-        data.add(new Girl(R.drawable.f3, "五颗星", "春春夏秋冬春夏秋冬春夏秋冬夏秋冬"));
-        data.add(new Girl(R.drawable.f4, "一颗星", "锌矿雕刻机房啥来得快"));
-        data.add(new Girl(R.drawable.f5, "五颗星", "阿萨德大所大所大所大所多"));
-        data.add(new Girl(R.drawable.f6, "三颗星", "请问请问请问请问恶趣味请问"));
-        data.add(new Girl(R.drawable.f7, "五颗星", "五洲新春V字形从V字形从"));
-        data.add(new Girl(R.drawable.f8, "一颗星", "V过好几个号个换个换个个换个"));
-        data.add(new Girl(R.drawable.f9, "五颗星", "华为认为人生巅峰手电筒赵大夫VC"));
-        data.add(new Girl(R.drawable.f10, "四颗星", "玩儿玩儿飞山东人玩儿为睡房顶玩儿"));
-        data.add(new Girl(R.drawable.f11, "五颗星", "sdf玩儿 姑苏风光sdf玩儿"));
-        data.add(new Girl(R.drawable.f12, "二颗星", "反问我而往让它温柔绕弯儿问题问题问题鬼地方个"));
-    }
+/**
+ * ① 根除 activity 内存泄漏的问题；
+ * ② 让 mvp 更方便使用；
+ * 实例：
+ * 1.解决activity和presenter过多，每个activity都进行绑定解绑，反复操作的问题；
+ * 2.由activity选择表示层，而不是在接口中new；
+ * 3.有很多个表示层的时候，多个View可以选择同一个Presenter，
+ * 但是View和Model一定会有很多个；
+ */
+public class MainActivity extends BaseActivity<IGirlView, GirlPresenter<IGirlView>> implements IGirlView {
+    private GridView listView;
+//    GirlPresenter girlPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        init();
         listView = findViewById(R.id.listview);
-        GirlAdapter adapter = new GirlAdapter(this, data);
+//        girlPresenter = new GirlPresenter();
+        // 进行绑定，解决内存泄漏，不再是内存紧张的时候，只要是GC有空就会回收
+//        girlPresenter.attachView(this); 在 baseactivity中已经做了
+        girlPresenter.fetch();
+    }
+
+    @Override
+    protected GirlPresenter<IGirlView> createPresenter() {
+        return new GirlPresenter<>();
+    }
+
+//    @Override
+//    protected void onDestroy() { 在 baseactivity中已经做了
+//        super.onDestroy();
+//        girlPresenter.detachView();    // 进行绑定，解决内存泄漏，不再是内存紧张的时候，只要是GC有空就会回收
+//    }
+
+    @Override
+    public void showLoading() {
+        Toast.makeText(this, "加载成功", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showGirls(List<Girl> girls) {
+        GirlAdapter adapter = new GirlAdapter(this, girls);
         listView.setAdapter(adapter);
     }
 }
